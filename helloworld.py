@@ -1,4 +1,4 @@
-print("Hello World! Welcome to Python Examples.")
+print("Welcome to the deblanker, prepare to be deblanked")
 import csv
 # with open('deblanker_test.csv','r+') as csv_file:
 #     csv_reader = csv.reader(csv_file, delimiter=',')
@@ -31,17 +31,22 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
 # this section gets the maximum run order number in the csv
         run_orders=[]
         for row in reader:
-            print(row)
             run_orders.append(int(row[run_order_column_index]))
         max_run_order=max(run_orders)
-
-
+# the seek returns the csv reader to the begining of the file    
+        csvinput.seek(0)
+# this skips the title row
+        next(csvinput, None)
+# this loops over the samples and firstly looks at the pre-wash and counts the instances of peptides into a dictionary
         while current_run_order<=max_run_order:
             current_blank_run_order=current_run_order-1
             blank_sequence_counts={}
             for row in reader:
                 if int(row[run_order_column_index])==current_blank_run_order:
                     blank_sequence_counts[row[sequence_column_index]] = blank_sequence_counts.get(row[sequence_column_index], 0) + 1
+            csvinput.seek(0)
+            print(blank_sequence_counts['VIDLMAHMATKE'])
+            next(csvinput, None)
             print(blank_sequence_counts)
             current_run_order+=2
 
