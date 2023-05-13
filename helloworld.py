@@ -39,19 +39,31 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
         next(csvinput, None)
 # this loops over the samples and firstly looks at the pre-wash and counts the instances of peptides into a dictionary
         while current_run_order<=max_run_order:
+
             current_blank_run_order=current_run_order-1
             blank_sequence_counts={}
             for row in reader:
                 if int(row[run_order_column_index])==current_blank_run_order:
                     blank_sequence_counts[row[sequence_column_index]] = blank_sequence_counts.get(row[sequence_column_index], 0) + 1
             csvinput.seek(0)
-            print(blank_sequence_counts['VIDLMAHMATKE'])
             next(csvinput, None)
+            print(current_blank_run_order)
             print(blank_sequence_counts)
+            print(current_run_order)
+
+            sample_sequence_counts={}
+            for row in reader:
+                if int(row[run_order_column_index])==current_run_order:
+                    sample_sequence_counts[row[sequence_column_index]] = sample_sequence_counts.get(row[sequence_column_index], 0) + 1
+            csvinput.seek(0)
+            next(csvinput, None)
+            print(sample_sequence_counts)
             current_run_order+=2
 
-        for row in reader:
-            row.append(row[0])
-            all.append(row)
+
+# don't know that we need this?
+        # for row in reader:
+        #     row.append(row[0])
+        #     all.append(row)
 
         writer.writerows(all)
