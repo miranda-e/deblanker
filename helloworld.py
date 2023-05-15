@@ -18,7 +18,8 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
     with open('deblanker_output.csv', 'w') as csvoutput:
         writer = csv.writer(csvoutput, lineterminator='\n')
         reader = csv.reader(csvinput)
-
+# calculate threshhold
+        threshold=0.25
 # this section adds the 'Passes threshold' column header
         all = []
         first_row = next(reader)
@@ -47,9 +48,9 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
                     blank_sequence_counts[row[sequence_column_index]] = blank_sequence_counts.get(row[sequence_column_index], 0) + 1
             csvinput.seek(0)
             next(csvinput, None)
-            print(current_blank_run_order)
+            print(f'Blank machine run #{current_blank_run_order} contains:')
             print(blank_sequence_counts)
-            print(current_run_order)
+            print(f'Machine run #{current_run_order} contains:')
 
             sample_sequence_counts={}
             for row in reader:
@@ -58,6 +59,19 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
             csvinput.seek(0)
             next(csvinput, None)
             print(sample_sequence_counts)
+            print(f' count of ISTLNSHNLPILR = {sample_sequence_counts.get("ISTLNSHNLPILR")}')
+            print(f' count of ISTLNSHNLPILR = {sample_sequence_counts.get("ISTLNSHNLPILR", 0)}')
+
+            for row in reader:
+                # LOGIC HERE
+                if int(row[run_order_column_index])==current_blank_run_order:
+                    all.append(row)
+                if int(row[run_order_column_index])==current_run_order:
+                    row.append(sample_sequence_counts.get(row[sequence_column_index],0)*threshold>=blank_sequence_counts.get(row[sequence_column_index],0))
+                    all.append(row)
+            
+            csvinput.seek(0)
+            next(csvinput, None)
             current_run_order+=2
 
 
