@@ -1,6 +1,6 @@
-print("Welcome to the deblanker, prepare to be deblanked")
+print("Thanks for banking with deblanking")
 import csv
-
+import math
 # this makes a funtion to do the seek and skip title
 def reset_csv(csv_file):
     # the seek returns the csv reader to the begining of the file    
@@ -55,51 +55,33 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
         next(csvinput, None)
         # working out averages
         for peptide in unique_peptides:
-            master_peptide_values[peptide]['mean']=sum(list(master_peptide_values[peptide]['run_counts'].values()))/max_run_order
-        print(master_peptide_values)
-        # this loops over the samples and firstly looks at the pre-wash and counts the instances of peptides into a dictionary
-        while current_run_order<=max_run_order:
+            run_counts_arr=list(master_peptide_values[peptide]['run_counts'].values())
+            master_peptide_values[peptide]['mean']=sum(run_counts_arr)/max_run_order
+            mean=master_peptide_values[peptide]['mean']
+            # working out standard deviation
+            sum_of_run_counts_minus_mean_squared=0
+            for count in run_counts_arr:
+                sum_of_run_counts_minus_mean_squared+=(count-mean)**2
+            number_of_zero_value_peptide_counts=max_run_order-len(run_counts_arr)
+            sum_of_run_counts_minus_mean_squared+= mean**2*number_of_zero_value_peptide_counts
+            master_peptide_values[peptide]['standard_deviation']=math.sqrt(sum_of_run_counts_minus_mean_squared/max_run_order)
 
-            current_blank_run_order=current_run_order-1
-            blank_sequence_counts={}
-            for row in reader:
-                if int(row[run_order_column_index])==current_blank_run_order:
-                    blank_sequence_counts[row[sequence_column_index]] = blank_sequence_counts.get(row[sequence_column_index], 0) + 1
-            csvinput.seek(0)
-            next(csvinput, None)
-        #     print(f'Blank machine run #{current_blank_run_order} contains:')
-        #     print(blank_sequence_counts)
-        #     print(f'Machine run #{current_run_order} contains:')
+        for row in reader:
+            # this leaves wash rows without a true or false value
+            if int(row[run_order_column_index])%2 != 0:
+                all.append(row)
+            else:
+                # use this logic if you want peptides >=4x as abundant in sample than blank to pass
+                current_blank_peptide_count=master_peptide_values[row[sequence_column_index]]['run_counts'].get(int(row[run_order_column_index])-1,0)
+                current_rows_run_peptide_count=master_peptide_values[row[sequence_column_index]]['run_counts'].get(row[run_order_column_index],0)
+                current_rows_peptide_stdev=master_peptide_values[row[sequence_column_index]]['standard_deviation']
+                blank_count_plus_2x_stdev=current_blank_peptide_count+current_rows_peptide_stdev*2
+                # the following line allows sample to pass if their value=0 in blank and >0 in sample
+                zero_blank_allowed=current_rows_run_peptide_count != 0 and current_blank_peptide_count == 0
+                row.append((current_rows_run_peptide_count>blank_count_plus_2x_stdev) or zero_blank_allowed)
+                all.append(row)
 
-            sample_sequence_counts={}
-            for row in reader:
-                if int(row[run_order_column_index])==current_run_order:
-                    sample_sequence_counts[row[sequence_column_index]] = sample_sequence_counts.get(row[sequence_column_index], 0) + 1
-            csvinput.seek(0)
-            next(csvinput, None)
-        #     print(sample_sequence_counts)
-        #     print(f' count of ISTLNSHNLPILR = {sample_sequence_counts.get("ISTLNSHNLPILR")}')
-        #     print(f' count of ISTLNSHNLPILR = {sample_sequence_counts.get("ISTLNSHNLPILR", 0)}')
-
-            for row in reader:
-                # LOGIC HERE
-                if int(row[run_order_column_index])==current_blank_run_order:
-                    all.append(row)
-
-
-                if int(row[run_order_column_index])==current_run_order:
-                    row.append(sample_sequence_counts.get(row[sequence_column_index],0)*threshold>=blank_sequence_counts.get(row[sequence_column_index],0))
-                    all.append(row)
-            
-            csvinput.seek(0)
-            next(csvinput, None)
-            current_run_order+=2
-
-
-# don't know that we need this?
-        # for row in reader:
-        #     row.append(row[0])
-        #     all.append(row)
-
+        csvinput.seek(0)
+        next(csvinput, None)
         writer.writerows(all)
 
