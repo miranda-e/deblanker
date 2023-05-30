@@ -1,4 +1,4 @@
-print("Thanks for banking with deblanking")
+print("Welcome to the deblanker")
 import csv
 import math
 # this makes a funtion to do the seek and skip title
@@ -65,23 +65,20 @@ with open('deblanker_test.csv','r', encoding='utf-8-sig') as csvinput:
             number_of_zero_value_peptide_counts=max_run_order-len(run_counts_arr)
             sum_of_run_counts_minus_mean_squared+= mean**2*number_of_zero_value_peptide_counts
             master_peptide_values[peptide]['standard_deviation']=math.sqrt(sum_of_run_counts_minus_mean_squared/max_run_order)
-
         for row in reader:
             # this leaves wash rows without a true or false value
             if int(row[run_order_column_index])%2 != 0:
                 all.append(row)
             else:
-                # use this logic if you want peptides >=4x as abundant in sample than blank to pass
-                current_blank_peptide_count=master_peptide_values[row[sequence_column_index]]['run_counts'].get(int(row[run_order_column_index])-1,0)
+                current_blank_peptide_count=master_peptide_values[row[sequence_column_index]]['run_counts'].get(str(int(row[run_order_column_index])-1),0)
                 current_rows_run_peptide_count=master_peptide_values[row[sequence_column_index]]['run_counts'].get(row[run_order_column_index],0)
                 current_rows_peptide_stdev=master_peptide_values[row[sequence_column_index]]['standard_deviation']
                 blank_count_plus_2x_stdev=current_blank_peptide_count+current_rows_peptide_stdev*2
                 # the following line allows sample to pass if their value=0 in blank and >0 in sample
-                zero_blank_allowed=current_rows_run_peptide_count != 0 and current_blank_peptide_count == 0
-                row.append((current_rows_run_peptide_count>blank_count_plus_2x_stdev) or zero_blank_allowed)
+                zero_blank_allowed=  current_rows_run_peptide_count > 0 and current_blank_peptide_count == 0
+                row.append(current_rows_run_peptide_count>blank_count_plus_2x_stdev or zero_blank_allowed)
                 all.append(row)
-
         csvinput.seek(0)
         next(csvinput, None)
         writer.writerows(all)
-
+print("deblanking completed, thanks for banking with deblanking")
