@@ -1,3 +1,1 @@
-- We installed pipenv to manage python dependencies. 
-- It's installed in the deblanker folder
-- to enter the virtual environment use the command `pipenv shell`
+Given a Maxquant evidence file with added run order column, and machine blanks run before every target sample, this script removes peptides found in machine washes from the following target sample if they are found above a specified threshold.
